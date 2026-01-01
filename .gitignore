@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+pycache__/
+*.pyc
+
+# Ambiente virtual
+.venv/
+
+# Logs e modelos
+*.log
+*.pt
+*.jpg
