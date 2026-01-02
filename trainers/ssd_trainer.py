@@ -47,7 +47,7 @@ def _validate_prepared_dataset(prepared_dir: Path) -> None:
     for split in DATASET_SPLITS:
         split_dir = prepared_dir / split
         images_dir = split_dir / IMAGES_DIRNAME
-        annotations_path = split / "annotations.json"
+        annotations_path = split_dir / "annotations.json"
 
         if not split_dir.exists():
             raise FileNotFoundError(f"Split não encontrado: {split_dir}")

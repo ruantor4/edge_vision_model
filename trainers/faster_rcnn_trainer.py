@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any, Dict
 
 from config.settings import(
-    DATASET_DIR,
     DATASET_SPLITS,
     IMAGES_DIRNAME,
     ARTIFACTS_PREPARED_DATA_DIR,
@@ -42,11 +41,11 @@ def _validate_prepared_dataset(prepared_dir: Path) -> None:
     logger.info("Validando dataset preparado para Faster R-CNN")
 
     if not prepared_dir.exists():
-        raise FileNotFoundError("Diretório preparado não encontrado: {prepared_dir}")
+        raise FileNotFoundError(f"Diretório preparado não encontrado: {prepared_dir}")
     
     for split in DATASET_SPLITS:
         split_dir = prepared_dir / split
-        images_dir = prepared_dir / IMAGES_DIRNAME
+        images_dir = split_dir / IMAGES_DIRNAME
         annotations_path = split_dir / "annotations.json"
 
         if not split_dir.exists():
@@ -84,7 +83,7 @@ def _save_training_metadata(output_dir: Path, model_config: Dict[str, Any]) -> N
     - parâmetros do modelo
     - hiperparâmetros de treino
     """
-    metadata_path = output_dir / "trainig_metadata.txt"
+    metadata_path = output_dir / "training_metadata.txt"
 
     logger.info(f"Salvando metadados do treinamento em: {metadata_path}")
 
