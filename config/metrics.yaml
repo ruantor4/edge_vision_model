@@ -1,0 +1,31 @@
+evaluation:
+  protocol: coco
+  description: >
+    Avaliação padronizada baseada nas métricas COCO,
+    aplicada de forma consistente a todos os modelos.
+
+  metrics:
+    - name: precision
+      description: Proporção de detecções corretas entre as detecções realizadas
+
+    - name: recall
+      description: Proporção de objetos corretamente detectados
+
+    - name: map_50
+      description: Mean Average Precision com IoU = 0.50
+
+    - name: map_50_95
+      description: Mean Average Precision média para IoU entre 0.50 e 0.95
+
+    - name: inference_time_ms
+      description: Tempo médio de inferência por imagem em milissegundos
+
+  thresholds:
+    iou_thresholds:
+      min: 0.50
+      max: 0.95
+      step: 0.05
+
+    confidence_threshold: 0.50
+
+  evaluation_split: test

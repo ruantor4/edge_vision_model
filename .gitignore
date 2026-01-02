@@ -4,7 +4,7 @@ pycache__/
 *.pyc
 
 # Ambiente virtual
-.venv/
+.dev/
 
 # Logs e modelos
 *.log

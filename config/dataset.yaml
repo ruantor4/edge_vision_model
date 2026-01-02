@@ -1,0 +1,19 @@
+dataset:
+  name: edge-vision-dataset
+  description: Dataset de detecção de objetos validado no projeto Edge Vision EDA
+  format: yolo
+
+  root_dir: ../dataset_original
+
+  splits:
+    train: train
+    valid: valid
+    test: test
+
+  structure:
+    images_dir: images
+    labels_dir: labels
+    label_format: yolo
+
+  classes:
+    - mouse
