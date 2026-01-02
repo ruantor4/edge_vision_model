@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 from utils.logging_global import setup_logging
+from trainers.yolo_trainer import train_yolo
 from core.dataset_preparer import prepare_dataset
 from core.config_validator import (
     load_yaml,
@@ -82,6 +83,21 @@ def main() -> None:
     prepare_dataset("faster_rcnn")
 
     logger.info("Teste de preparação de datasets concluído com sucesso")
+
+    # ============================
+    # TESTE ISOLADO DE TREINAMENTO
+    # ============================
+    logger.info("Iniciando teste isolado do yolo_trainer")
+    
+    logger.info("Validando contrato do yolo_trainer")
+
+    _ = train_yolo  # apenas valida que a função existe e é importável
+
+    logger.info("yolo_trainer validado com sucesso")
+
+    logger.info("Main de teste finalizado com sucesso")
+    
+
 
 if __name__ == "__main__":
     main()

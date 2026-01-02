@@ -98,39 +98,50 @@ As métricas são definidas **antes do treinamento** e aplicadas de forma consis
 ```bash
 edge-vision-model/
 ├── config/
-│       ├── settings.py              # Configurações centrais do projeto
-│       ├── dataset.yaml             # Referência ao dataset externo
-│       ├── metrics.yaml             # Definição das métricas de avaliação
-│       └── models/
-│           ├── yolo.yaml
-│           ├── ssd.yaml
-│           └── faster_rcnn.yaml
+│     ├── settings.py                  # Configurações centrais do projeto
+│     ├── dataset.yaml                 # Referência ao dataset externo (RAW)
+│     ├── metrics.yaml                 # Definição formal das métricas de avaliação
+│     └── models/
+│         ├── yolo.yaml                # Configuração específica do YOLO
+│         ├── ssd.yaml                 # Configuração específica do SSD
+│         └── faster_rcnn.yaml         # Configuração específica do Faster R-CNN
 │
 ├── core/
-│      ├── dataset_preparer.py       # Preparação controlada do dataset
-│      ├── trainer.py                # Treinamento dos modelos
-│      ├── evaluator.py              # Avaliação dos modelos
-│      └── comparator.py             # Comparação entre algoritmos
+│     ├── dataset_preparer.py          # Preparação controlada e determinística do dataset
+│     └── config_validation.py         # Validação estrutural de todos os arquivos de configuração
+│
+├── trainers/
+│     ├── yolo_trainer.py              # Treinamento do modelo YOLO
+│     ├── ssd_trainer.py               # Treinamento do modelo SSD
+│     └── faster_rcnn_trainer.py       # Treinamento do modelo Faster R-CNN
+│
+├── evaluators/
+│     ├── yolo_evaluator.py            # Avaliação do modelo YOLO
+│     ├── ssd_evaluator.py             # Avaliação do modelo SSD
+│     └── faster_rcnn_evaluator.py     # Avaliação do modelo Faster R-CNN
+│
+├── comparator/
+│     └── model_comparator.py          # Comparação entre métricas dos modelos avaliados
 │
 ├── viz/
-│     └── plots.py                   # Visualizações comparativas (opcional)
+│     └── plots.py                     # Visualizações comparativas (opcional, pós-comparação)
 │
 ├── artifacts/
-│      ├── prepared_data/            # Datasets preparados (versionados)
-│      ├── models/                   # Pesos treinados
-│      ├── metrics/                  # Métricas de avaliação
-│      └── comparisons/              # Resultados comparativos
+│     ├── prepared_data/               # Datasets preparados por algoritmo
+│     ├── models/                      # Pesos e checkpoints treinados
+│     ├── metrics/                     # Métricas geradas pelos evaluators
+│     └── comparisons/                 # Resultados finais de comparação
 │
 ├── utils/
-│      └── logging_global.py         # Logging global do sistema
+│     └── logging_global.py            # Configuração global de logging
 │
-├── logs/
+├── logs/                              # Logs de execução da pipeline
 │
-├── main.py                          # Orquestração da pipeline de modelagem
+├── main.py                            # Orquestrador principal da pipeline
 │
-├── requirements.txt
+├── requirements.txt                   # Dependências do projeto
 │
-└── README.md
+└── README.md                          # Documentação técnica do projeto
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
