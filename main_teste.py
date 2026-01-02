@@ -8,8 +8,11 @@ import logging
 from pathlib import Path
 
 from utils.logging_global import setup_logging
+
 from trainers.yolo_trainer import train_yolo
 from trainers.ssd_trainer import train_ssd
+from trainers.faster_rcnn_trainer import train_faster_rcnn
+
 from core.dataset_preparer import prepare_dataset
 from core.config_validator import (
     load_yaml,
@@ -17,8 +20,6 @@ from core.config_validator import (
     validate_metrics_config,
     validate_model_config,
 )
-
-
 
 def main() -> None:
     setup_logging()
@@ -110,6 +111,14 @@ def main() -> None:
 
     logger.info("Main de teste finalizado com sucesso")
 
+    # FASTER RCNN
+    logger.info("Validando contrato do faster_rcnn_trainer")
+
+    _ = train_faster_rcnn
+    
+    logger.info("faster_rcnn_trainer validado com sucesso (sem execução)")
+
+    logger.info("Main de teste finalizado com sucesso")
 
 if __name__ == "__main__":
     main()
