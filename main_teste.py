@@ -46,8 +46,6 @@ def main() -> None:
     validate_model_config(yolo_config)
     logger.info("yolo.yaml validado com sucesso")
 
-    logger.info("Validação de configurações concluída com sucesso")
-
     # ============================
     # MODEL - SSD
     # ============================
@@ -55,8 +53,15 @@ def main() -> None:
     validate_model_config(ssd_config)
     logger.info("ssd.yaml validado com sucesso")
 
-    logger.info("Validação de configurações concluída com sucesso")
-
+    
+        # ============================
+    # MODEL - FASTER R-CNN
+    # ============================
+    faster_rcnn_config = load_yaml(Path("config/models/faster_rcnn.yaml"))
+    validate_model_config(faster_rcnn_config)
+    logger.info("faster_rcnn.yaml validado com sucesso")
+    
+    logger.info("Validações de configurações concluída com sucesso")
 
 
 if __name__ == "__main__":
