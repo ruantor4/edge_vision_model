@@ -1,7 +1,11 @@
 """
 config_validator.py
 
-Validação estrutural dos arquivos de configuração do projeto.
+Responsável pela validação estrutural dos arquivos de configuração
+do projeto edge-vision-model.
+
+Este módulo verifica apenas a existência e a estrutura mínima
+dos arquivos YAML, sem executar lógica de treinamento ou avaliação.
 """
 
 from pathlib import Path
@@ -20,6 +24,10 @@ def load_yaml(path: Path) -> dict:
 
 
 def validate_dataset_config(config: dict) -> None:
+    """
+    Valida a estrutura mínima do dataset.yaml.
+    """
+
     required_keys = ["dataset"]
 
     for key in required_keys:
@@ -34,6 +42,10 @@ def validate_dataset_config(config: dict) -> None:
 
 
 def validate_metrics_config(config: dict) -> None:
+    """
+    Valida a estrutura mínima do metrics.yaml.
+    """
+
     required_keys = ["evaluation"]
 
     for key in required_keys:
@@ -44,3 +56,24 @@ def validate_metrics_config(config: dict) -> None:
 
     if "metrics" not in evaluation or not isinstance(evaluation["metrics"], list):
         raise ValueError("Lista de métricas inválida ou ausente em metrics.yaml")
+
+
+def validate_model_config(config: dict) -> None:
+    """
+    Valida a estrutura mínima de um arquivo de configuração de modelo.
+    """
+
+    required_keys = ["model", "dataset", "training", "evaluation", "artifacts"]
+
+    for key in required_keys:
+        if key not in config:
+            raise ValueError(f"Chave obrigatória ausente no model config: {key}")
+
+    model = config["model"]
+    if "name" not in model:
+        raise ValueError("Campo 'model.name' ausente no model config")
+
+    training = config["training"]
+    for field in ["preferred_device", "fallback_device"]:
+        if field not in training:
+            raise ValueError(f"Campo obrigatório ausente em training: {field}")

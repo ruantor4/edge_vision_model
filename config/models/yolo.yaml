@@ -1,0 +1,35 @@
+model:
+  name: yolo
+  framework: ultralytics
+  version: v8
+  task: detection
+
+dataset:
+  source: dataset.yaml
+  format: yolo
+
+training:
+  epochs: 50
+  batch_size: 16
+  image_size: 640
+  optimizer: SGD
+  learning_rate: 0.01
+  weight_decay: 0.0005
+
+  preferred_device: cuda
+  fallback_device: cpu
+  mixed_precision: true
+
+  workers: 8
+  deterministic: true
+  seed: 42
+
+augmentation:
+  enabled: true
+
+evaluation:
+  use_metrics_from: metrics.yaml
+
+artifacts:
+  output_dir: artifacts/models/yolo
+  save_best: true
