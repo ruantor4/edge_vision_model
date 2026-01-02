@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 from utils.logging_global import setup_logging
+from core.dataset_preparer import prepare_dataset
 from core.config_validator import (
     load_yaml,
     validate_dataset_config,
@@ -54,7 +55,7 @@ def main() -> None:
     logger.info("ssd.yaml validado com sucesso")
 
     
-        # ============================
+    # ============================
     # MODEL - FASTER R-CNN
     # ============================
     faster_rcnn_config = load_yaml(Path("config/models/faster_rcnn.yaml"))
@@ -63,6 +64,24 @@ def main() -> None:
     
     logger.info("Validações de configurações concluída com sucesso")
 
+    # ============================
+    # PREPARE DATASETS
+    # ============================
+    logger.info("Iniciando teste de preparação de datasets")
+
+    # Teste YOLO
+    logger.info("=== TESTE: YOLO ===")
+    prepare_dataset("yolo")
+
+    # Teste SSD
+    logger.info("=== TESTE: SSD ===")
+    prepare_dataset("ssd")
+
+    # Teste Faster R-CNN
+    logger.info("=== TESTE: Faster R-CNN ===")
+    prepare_dataset("faster_rcnn")
+
+    logger.info("Teste de preparação de datasets concluído com sucesso")
 
 if __name__ == "__main__":
     main()

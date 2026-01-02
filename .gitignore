@@ -1,12 +1,65 @@
+# =========================
 # Python
+# =========================
 __pycache__/
-pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
 
-# Ambiente virtual
+# =========================
+# Ambientes virtuais
+# =========================
 .dev/
+.venv/
+venv/
 
-# Logs e modelos
+# =========================
+# Logs
+# =========================
+logs/
 *.log
+
+# =========================
+# Datasets (NUNCA versionar)
+# =========================
+dataset_original/
+data/
+prepared_data/
+
+# =========================
+# Artifacts gerados
+# =========================
+artifacts/
+outputs/
+experiments/
+
+# =========================
+# Modelos treinados
+# =========================
 *.pt
+*.pth
+*.onnx
+*.engine
+
+# =========================
+# Imagens e vídeos gerados automaticamente
+# =========================
 *.jpg
+*.jpeg
+*.png
+*.mp4
+*.avi
+
+# =========================
+# Cache e temporários
+# =========================
+.cache/
+.ipynb_checkpoints/
+
+# =========================
+# SO / IDE
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
