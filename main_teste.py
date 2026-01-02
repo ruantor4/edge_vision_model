@@ -9,6 +9,7 @@ from pathlib import Path
 
 from utils.logging_global import setup_logging
 from trainers.yolo_trainer import train_yolo
+from trainers.ssd_trainer import train_ssd
 from core.dataset_preparer import prepare_dataset
 from core.config_validator import (
     load_yaml,
@@ -16,6 +17,7 @@ from core.config_validator import (
     validate_metrics_config,
     validate_model_config,
 )
+
 
 
 def main() -> None:
@@ -87,6 +89,8 @@ def main() -> None:
     # ============================
     # TESTE ISOLADO DE TREINAMENTO
     # ============================
+    
+    # YOLO TRAINER
     logger.info("Iniciando teste isolado do yolo_trainer")
     
     logger.info("Validando contrato do yolo_trainer")
@@ -97,6 +101,14 @@ def main() -> None:
 
     logger.info("Main de teste finalizado com sucesso")
     
+    # SSD TRAINER
+    logger.info("Validando contrato do ssd_trainer")
+    
+    _ = train_ssd
+    
+    logger.info("ssd_trainer validado com sucesso (sem execução)")
+
+    logger.info("Main de teste finalizado com sucesso")
 
 
 if __name__ == "__main__":
