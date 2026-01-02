@@ -48,6 +48,16 @@ def main() -> None:
 
     logger.info("Validação de configurações concluída com sucesso")
 
+    # ============================
+    # MODEL - SSD
+    # ============================
+    ssd_config = load_yaml(Path("config/models/ssd.yaml"))
+    validate_model_config(ssd_config)
+    logger.info("ssd.yaml validado com sucesso")
+
+    logger.info("Validação de configurações concluída com sucesso")
+
+
 
 if __name__ == "__main__":
     main()
