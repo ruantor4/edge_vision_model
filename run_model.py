@@ -16,10 +16,17 @@ from core.config_validator import (
     validate_metrics_config,
     validate_model_config,
 )
-
 from trainers.yolo_trainer import train_yolo
 from trainers.ssd_trainer import train_ssd
 from trainers.faster_rcnn_trainer import train_faster_rcnn
+
+from config.settings import (
+    YOLO_CONFIG_PATH,
+    SSD_CONFIG_PATH,
+    FASTER_RCNN_CONFIG_PATH,
+    DATASET_CONFIG_PATH,
+    METRICS_CONFIG_PATH,
+)
 
 
 def run_train(model_name: str) -> None:
@@ -29,17 +36,17 @@ def run_train(model_name: str) -> None:
     logger.info(f"Iniciando treinamento do modelo: {model}")
 
     if model == "yolo":
-        model_config = load_yaml(Path("config/models/yolo.yaml"))
+        model_config = load_yaml(Path(YOLO_CONFIG_PATH))
         validate_model_config(model_config)
         train_yolo(model_config)
 
     elif model == "ssd":
-        model_config = load_yaml(Path("config/models/ssd.yaml"))
+        model_config = load_yaml (Path(SSD_CONFIG_PATH))
         validate_model_config(model_config)
         train_ssd(model_config)
 
     elif model == "faster_rcnn":
-        model_config = load_yaml(Path("config/models/faster_rcnn.yaml"))
+        model_config = load_yaml(Path(FASTER_RCNN_CONFIG_PATH))
         validate_model_config(model_config)
         train_faster_rcnn(model_config)
 
@@ -74,13 +81,12 @@ def main() -> None:
 
     logger.info("Iniciando execução da pipeline")
 
-    # ============================
+
     # VALIDAÇÕES GLOBAIS
-    # ============================
-    dataset_config = load_yaml(Path("config/dataset.yaml"))
+    dataset_config = load_yaml(Path(DATASET_CONFIG_PATH))
     validate_dataset_config(dataset_config)
 
-    metrics_config = load_yaml(Path("config/metrics.yaml"))
+    metrics_config = load_yaml(Path(METRICS_CONFIG_PATH))
     validate_metrics_config(metrics_config)
 
     logger.info("Configurações globais validadas com sucesso")

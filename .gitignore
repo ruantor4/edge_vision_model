@@ -63,3 +63,8 @@ experiments/
 Thumbs.db
 .vscode/
 .idea/
+
+# =========================
+# System tool/ DEBUG
+# =========================
+/tools

@@ -1,7 +1,7 @@
 model:
   name: yolo
   framework: ultralytics
-  version: v8
+  version: yolov8n.pt
   task: detection
 
 dataset:
@@ -10,7 +10,7 @@ dataset:
 
 training:
   epochs: 50
-  batch_size: 16
+  batch_size: 8
   image_size: 640
   optimizer: SGD
   learning_rate: 0.01
@@ -19,13 +19,15 @@ training:
   preferred_device: cuda
   fallback_device: cpu
   mixed_precision: true
-
-  workers: 8
+  workers: 2
   deterministic: true
   seed: 42
 
-augmentation:
-  enabled: true
+  early_stopping:
+    enabled: true
+    monitor: AP_50_95_all
+    patience: 7
+    min_delta: 0.001
 
 evaluation:
   use_metrics_from: metrics.yaml

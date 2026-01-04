@@ -73,3 +73,18 @@ RANDOM_SEED = 42
 
 # Indica se os artefatos existentes podem ser sobrescritos
 ALLOW_OVERWRITE_ARTIFACTS = False
+
+
+# PATHS DOS ARQUIVOS DE CONFIGURAÇÃO
+CONFIG_DIR = ROOT_DIR / "config"
+
+# Configurações de modelos
+CONFIG_MODELS_DIR = CONFIG_DIR / "models"
+
+YOLO_CONFIG_PATH = CONFIG_MODELS_DIR / "yolo.yaml"
+SSD_CONFIG_PATH = CONFIG_MODELS_DIR / "ssd.yaml"
+FASTER_RCNN_CONFIG_PATH = CONFIG_MODELS_DIR / "faster_rcnn.yaml"
+
+# Configurações globais
+DATASET_CONFIG_PATH = CONFIG_DIR / "dataset.yaml"
+METRICS_CONFIG_PATH = CONFIG_DIR / "metrics.yaml"

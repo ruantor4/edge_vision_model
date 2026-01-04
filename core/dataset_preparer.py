@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 import logging
 import shutil
+from PIL import Image
 
 from config.settings import(
     DATASET_DIR,
@@ -120,6 +121,112 @@ def _create_output_dirs(path: Path) -> None:
     _ensure_output_dirs(path)
 
 
+def _convert_yolo_split_to_coco(
+    raw_split_dir: Path,
+    prepared_split_dir: Path,
+) -> None:
+    """
+    Converte um split do dataset do formato YOLO para COCO.
+
+    - Lê imagens e labels YOLO
+    - Converte bounding boxes normalizadas para pixels
+    - Gera annotations.json no formato COCO
+    """
+
+    images_dir = raw_split_dir / IMAGES_DIRNAME
+    labels_dir = raw_split_dir / LABELS_DIRNAME
+
+    coco = {
+        "images": [],
+        "annotations": [],
+        "categories": [
+            {
+                "id": 1,
+                "name": "object",
+            }
+        ],
+    }
+
+    image_id = 1
+    annotation_id = 1
+
+    for image_path in images_dir.iterdir():
+        if not image_path.is_file():
+            continue
+
+        with Image.open(image_path) as img:
+            width, height = img.size
+
+        coco["images"].append(
+            {
+                "id": image_id,
+                "file_name": image_path.name,
+                "width": width,
+                "height": height,
+            }
+        )
+
+        label_path = labels_dir / f"{image_path.stem}.txt"
+
+        if label_path.exists():
+            with open(label_path, "r") as f:
+                for line in f:
+                    parts = line.strip().split()
+                    if len(parts) != 5:
+                        continue
+
+                    _, x_c, y_c, w, h = map(float, parts)
+
+                    bbox_width = w * width
+                    bbox_height = h * height
+                    x_min = (x_c * width) - (bbox_width / 2)
+                    y_min = (y_c * height) - (bbox_height / 2)
+
+                    coco["annotations"].append(
+                        {
+                            "id": annotation_id,
+                            "image_id": image_id,
+                            "category_id": 1,
+                            "bbox": [
+                                round(x_min, 2),
+                                round(y_min, 2),
+                                round(bbox_width, 2),
+                                round(bbox_height, 2),
+                            ],
+                            "area": round(bbox_width * bbox_height, 2),
+                            "iscrowd": 0,
+                        }
+                    )
+
+                    annotation_id += 1
+
+        image_id += 1
+
+    annotations_path = prepared_split_dir / "annotations.json"
+    with open(annotations_path, "w") as f:
+        json.dump(coco, f, indent=2)
+
+    logger.info(f"Annotations COCO geradas em: {annotations_path}")
+
+
+def _generate_yolo_data_yaml(prepared_yolo_dir: Path, class_names: list[str]) -> None:
+    """
+    Gera o arquivo data.yaml exigido pelo Ultralytics YOLO.
+    """
+    data_yaml_path = prepared_yolo_dir / "data.yaml"
+
+    content = {
+        "path": str(prepared_yolo_dir),
+        "train": "train/images",
+        "val": "valid/images",
+        "test": "test/images",
+        "names": {i: name for i, name in enumerate(class_names)},
+    }
+
+    import yaml
+    with open(data_yaml_path, "w") as f:
+        yaml.dump(content, f, sort_keys=False)
+
 # FUNÇOES PRINCIPAIS
 
 def prepare_dataset(model_name: str) -> None:
@@ -171,10 +278,10 @@ def prepare_yolo_dataset() -> None:
     # Criação segura do diretório raiz do artifact
     _create_output_dirs(output_dir)
 
-    # 3. Replica a estrutura de splits (train/valid/test)
+    # Replica a estrutura de splits (train/valid/test)
     _copy_split_structure(output_dir)
-    
-    # 4. Cópia dos arquivos (imagens e labels) do RAW para o dataset preparado
+
+    # Cópia dos arquivos (imagens e labels) do RAW para o dataset preparado
     for split in DATASET_SPLITS:
         raw_split_dir = DATASET_DIR / split
         prepared_split_dir = output_dir / split
@@ -196,6 +303,17 @@ def prepare_yolo_dataset() -> None:
         for label_path in raw_labels_dir.iterdir():
             if label_path.is_file():
                 shutil.copy(label_path, prepared_labels_dir / label_path.name)
+        
+        _convert_yolo_split_to_coco(
+            raw_split_dir=raw_split_dir,
+            prepared_split_dir=prepared_split_dir
+        )
+        
+    # Gera Yaml
+    _generate_yolo_data_yaml(
+        prepared_yolo_dir=output_dir,
+        class_names=["mouse"],
+    )
 
     logger.info("Dataset no formato YOLO preparado com sucesso")
 
@@ -228,28 +346,21 @@ def prepare_ssd_dataset() -> None:
     for split in DATASET_SPLITS:
         logger.info((f"Preparando split {split} para o formato SSD"))
 
-        raw_images_dir = DATASET_DIR / split / IMAGES_DIRNAME
+        raw_split_dir = DATASET_DIR / split
         prepare_split_dir = output_dir / split
         prepared_images_dir = prepare_split_dir / IMAGES_DIRNAME
 
         # Copia imagens
-        for image_path in raw_images_dir.iterdir():
+        for image_path in (raw_split_dir / IMAGES_DIRNAME).iterdir():
             if image_path.is_file():
                 shutil.copy(image_path, prepared_images_dir / image_path.name)
 
-        # Cria annotations COCO minimas
-        annotations = {
-            "images": [],
-            "annotations": [],
-            "categories": [],
-        }
+        _convert_yolo_split_to_coco( 
+            raw_split_dir=raw_split_dir,
+            prepared_split_dir=prepare_split_dir,
+        )
 
-        annotations_path = prepare_split_dir / "annotations.json"
-        # Salva as anotações convertidas em formato JSON
-        with open(annotations_path, "w") as f:
-            json.dump(annotations, f, indent=2)
-
-    logger.info(f"Dataset no formato SSD preparado com sucesso em: {annotations_path}")
+    logger.info("Dataset no formato SSD preparado com sucesso")
 
 
 def prepare_faster_rcnn_dataset() -> None:
@@ -280,25 +391,20 @@ def prepare_faster_rcnn_dataset() -> None:
     for split in DATASET_SPLITS:
         logger.info(f"Convertendo split {split} para o formato Faster R-CNN")
 
-        raw_images_dir = DATASET_DIR / split / IMAGES_DIRNAME
+        raw_split_dir = DATASET_DIR / split 
         prepare_split_dir = output_dir / split
         prepared_images_dir = prepare_split_dir / IMAGES_DIRNAME
 
         # Copia imagens
-        for image_path in raw_images_dir.iterdir():
+        for image_path in (raw_split_dir / IMAGES_DIRNAME).iterdir():
             if image_path.is_file():
                 shutil.copy(image_path, prepared_images_dir / image_path.name)
-
-        # Cria annotations COCO minimas
-        annotations = {
-            "images": [],
-            "annotations": [],
-            "categories": [],
-        }
-
-        # Salva as anotações convertidas em formato JSON
-        annotations_path = prepare_split_dir / "annotations.json"
-        with open(annotations_path, "w") as f:
-            json.dump(annotations, f, indent=2)
         
-    logger.info("Dataset no formato Faster R-CNN preparado com sucesso em: {annotations_path}")
+        _convert_yolo_split_to_coco(  
+            raw_split_dir=raw_split_dir,
+            prepared_split_dir=prepare_split_dir,
+        )
+
+    logger.info(
+        f"Dataset no formato Faster R-CNN preparado com sucesso em: {output_dir}"
+    )
