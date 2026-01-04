@@ -97,51 +97,86 @@ As métricas são definidas **antes do treinamento** e aplicadas de forma consis
 
 ```bash
 edge-vision-model/
-├── config/
-│     ├── settings.py                  # Configurações centrais do projeto
-│     ├── dataset.yaml                 # Referência ao dataset externo (RAW)
-│     ├── metrics.yaml                 # Definição formal das métricas de avaliação
-│     └── models/
-│         ├── yolo.yaml                # Configuração específica do YOLO
-│         ├── ssd.yaml                 # Configuração específica do SSD
-│         └── faster_rcnn.yaml         # Configuração específica do Faster R-CNN
+├── artifacts/                          # Artefatos gerados ao longo da pipeline
+│   ├── prepared_data/                  # Datasets preparados por algoritmo (YOLO / SSD / Faster R-CNN)
+│   ├── models/                         # Pesos e checkpoints dos modelos treinados
+│   │   ├── yolo/                       # Artefatos de treino do YOLO
+│   │   │   ├── best_model.pt           # Melhor peso do YOLO (validação)
+│   │   │   ├── final_model.pt          # Peso final do YOLO
+│   │   │   └── training_metadata.txt   # Metadados do treinamento
+│   │   ├── ssd/                        # Artefatos de treino do SSD
+│   │   │   ├── best_model.pth          # Melhor peso do SSD
+│   │   │   ├── final_model.pth         # Peso final do SSD
+│   │   │   └── training_metadata.txt   # Metadados do treinamento
+│   │   └── faster_rcnn/                # Artefatos de treino do Faster R-CNN
+│   │       ├── best_model.pth          # Melhor peso do Faster R-CNN
+│   │       ├── final_model.pth         # Peso final do Faster R-CNN
+│   │       └── training_metadata.txt   # Metadados do treinamento
+│   │
+│   ├── metrics/                        # Métricas geradas pelos evaluators (CSV COCO-style)
+│   │   ├── yolo_test.csv               # Métricas finais do YOLO
+│   │   ├── ssd_test.csv                # Métricas finais do SSD
+│   │   └── faster_rcnn_test.csv        # Métricas finais do Faster R-CNN
+│   │
+│   └── comparisons/                    # Resultados comparativos consolidados
+│       ├── models_comparison.csv       # Comparação de métricas (AP / AR)
+│       ├── models_comparison.json      # Comparação de métricas (formato técnico)
+│       ├── models_cost_comparison.csv  # Comparação de custo computacional
+│       ├── models_cost_comparison.json # Comparação de custo computacional (técnico)
+│       ├── models_final_comparison.csv # Consolidação final (métricas + custo)
+│       └── models_final_comparison.json
 │
-├── core/
-│     ├── dataset_preparer.py          # Preparação controlada e determinística do dataset
-│     └── config_validation.py         # Validação estrutural de todos os arquivos de configuração
+├── comparator/                         # Módulos de comparação entre modelos
+│   ├── __init__.py
+│   ├── model_comparator_metrics.py     # Comparação de métricas de avaliação (AP / AR)
+│   ├── model_comparator_cost.py        # Comparação de custo computacional (inferência)
+│   └── model_comparator_merge.py       # Consolidação final dos resultados
 │
-├── trainers/
-│     ├── yolo_trainer.py              # Treinamento do modelo YOLO
-│     ├── ssd_trainer.py               # Treinamento do modelo SSD
-│     └── faster_rcnn_trainer.py       # Treinamento do modelo Faster R-CNN
+├── config/                             # Configurações centrais do projeto
+│   ├── __init__.py
+│   ├── settings.py                     # Configuração global (paths, flags, parâmetros)
+│   ├── dataset.yaml                    # Referência ao dataset externo (RAW)
+│   ├── metrics.yaml                    # Definição formal das métricas de avaliação
+│   └── models/                         # Configurações específicas por modelo
+│       ├── yolo.yaml                   # Configuração do YOLO
+│       ├── ssd.yaml                    # Configuração do SSD
+│       └── faster_rcnn.yaml            # Configuração do Faster R-CNN
 │
-├── evaluators/
-│     ├── yolo_evaluator.py            # Avaliação do modelo YOLO
-│     ├── ssd_evaluator.py             # Avaliação do modelo SSD
-│     └── faster_rcnn_evaluator.py     # Avaliação do modelo Faster R-CNN
+├── core/                               # Núcleo da pipeline de dados e validações
+│   ├── __init__.py
+│   ├── config_validator.py             # Validação estrutural das configurações
+│   ├── dataset_preparer.py             # Preparação determinística do dataset
+│   └── evaluation_runner.py            # Orquestra execução dos evaluators
 │
-├── comparator/
-│     └── model_comparator.py          # Comparação entre métricas dos modelos avaliados
+├── evaluators/                         # Avaliação individual dos modelos
+│   ├── __init__.py
+│   ├── base_coco_evaluator.py          # Classe base para avaliação COCO-style
+│   ├── yolo_evaluator.py               # Avaliação do YOLO
+│   ├── ssd_evaluator.py                # Avaliação do SSD
+│   └── faster_rcnn_evaluator.py        # Avaliação do Faster R-CNN
 │
-├── viz/
-│     └── plots.py                     # Visualizações comparativas (opcional, pós-comparação)
+├── trainers/                           # Treinamento dos modelos
+│   ├── __init__.py
+│   ├── yolo_trainer.py                 # Treinamento do YOLO
+│   ├── ssd_trainer.py                  # Treinamento do SSD
+│   └── faster_rcnn_trainer.py          # Treinamento do Faster R-CNN
 │
-├── artifacts/
-│     ├── prepared_data/               # Datasets preparados por algoritmo
-│     ├── models/                      # Pesos e checkpoints treinados
-│     ├── metrics/                     # Métricas geradas pelos evaluators
-│     └── comparisons/                 # Resultados finais de comparação
+├── utils/                              # Utilitários compartilhados
+│   ├── __init__.py
+│   └── logging_global.py               # Configuração global de logging
 │
-├── utils/
-│     └── logging_global.py            # Configuração global de logging
+├── logs/                               # Logs de execução da pipeline
+│   ├── edge_vision_model_YYYY-MM-DD.log
 │
-├── logs/                              # Logs de execução da pipeline
+├── tools/                              # Scripts auxiliares e experimentais
 │
-├── main.py                            # Orquestrador principal da pipeline
+├── main.py                             # Orquestrador principal da pipeline
+├── run_evaluate.py                     # Execução direta da etapa de avaliação
+├── run_model.py                        # Execução isolada de modelos (debug / teste)
+├── main_teste.py                       # Script auxiliar de testes
 │
-├── requirements.txt                   # Dependências do projeto
-│
-└── README.md                          # Documentação técnica do projeto
+├── requirements.txt                    # Dependências do projeto
+└── README.md                           # Documentação técnica do projeto
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
