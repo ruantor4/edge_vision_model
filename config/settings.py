@@ -88,3 +88,15 @@ FASTER_RCNN_CONFIG_PATH = CONFIG_MODELS_DIR / "faster_rcnn.yaml"
 # Configurações globais
 DATASET_CONFIG_PATH = CONFIG_DIR / "dataset.yaml"
 METRICS_CONFIG_PATH = CONFIG_DIR / "metrics.yaml"
+
+
+
+# ARTEFATOS FINAIS CONSOLIDADOS
+
+# CSV final consolidado (métricas + custo)
+ARTIFACTS_FINAL_COMPARISON_CSV = (
+    ARTIFACTS_COMPARISONS_DIR / "models_final_comparison.csv"
+)
+
+# Diretório de plots comparativos
+ARTIFACTS_PLOTS_DIR = ARTIFACTS_COMPARISONS_DIR / "plots"
