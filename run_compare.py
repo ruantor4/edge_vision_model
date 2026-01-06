@@ -13,6 +13,7 @@ Responsabilidades:
 - Executar o benchmark de custo computacional
 - Realizar o merge final dos resultados analíticos
 """
+
 import logging
 
 from utils.logging_global import setup_logging
@@ -41,6 +42,9 @@ from config.settings import (
     ARTIFACTS_COMPARISONS_DIR,
 )
 
+# ============================================================
+# ENTRYPOINT DA ETAPA DE COMPARAÇÃO
+# ============================================================
 
 def main() -> None:
     """
@@ -56,19 +60,22 @@ def main() -> None:
 
     logger.info("=== INICIANDO ETAPA DE COMPARAÇÃO ===")
 
+    # Garante diretório de saída dos artefatos comparativos
     ARTIFACTS_COMPARISONS_DIR.mkdir(parents=True, exist_ok=True)
 
     # ============================================================
     # 1. CUSTO COMPUTACIONAL
     # ============================================================
+
     logger.info("Executando benchmark de custo computacional")
 
     cost_results = compare_models_cost()
     export_results(cost_results)
 
-    # ============================================================
+    # ========================================================
     # 2. MÉTRICAS DE AVALIAÇÃO
-    # ============================================================
+    # ========================================================
+
     logger.info("Consolidando métricas de avaliação")
 
     csv_files = [
@@ -76,7 +83,8 @@ def main() -> None:
         ARTIFACTS_METRICS_DIR / "ssd_test.csv",
         ARTIFACTS_METRICS_DIR / "yolo_test.csv",
     ]
-
+    
+    # Validação explícita da existência dos CSVs
     for csv_file in csv_files:
         if not csv_file.exists():
             raise FileNotFoundError(
@@ -97,9 +105,10 @@ def main() -> None:
         ARTIFACTS_COMPARISONS_DIR / "models_comparison.json",
     )
 
-    # ============================================================
-    # 3. MERGE FINAL
-    # ============================================================
+    # ========================================================
+    # 3. MERGE FINAL DOS RESULTADOS
+    # ========================================================
+    
     logger.info("Consolidando resultados finais")
 
     metrics_data = load_csv_as_dict(

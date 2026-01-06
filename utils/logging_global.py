@@ -14,6 +14,10 @@ import logging
 
 from config.settings import LOGS_DIR
 
+# ============================================================
+# CONFIGURAÇÃO GLOBAL DE LOGGING
+# ============================================================
+
 def setup_logging()-> None:
     """
     Configura o logger global com formato e arquivo de saída.
@@ -21,14 +25,25 @@ def setup_logging()-> None:
     # Evita configuração duplicada de handlers
     if logging.getLogger().handlers:
         return
-
+    
+    # ========================================================
+    # ARQUIVO DE LOG
+    # ========================================================
+    
     # Data atual para nome do arquivo de log
     date_str = datetime.now().strftime("%Y-%m-%d")
     log_file = LOGS_DIR / f"edge_vision_model_{date_str}.log"
 
-    # Formato do log
+    # ========================================================
+    # FORMATO DE LOG
+    # ========================================================
+
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
+    # ========================================================
+    # CONFIGURAÇÃO DO LOGGER
+    # ========================================================
+
     logging.basicConfig(
         level = logging.INFO,
         format = log_format,

@@ -28,34 +28,53 @@ from config.settings import (
 )
 
 
+# ============================================================
+# MODELOS SUPORTADOS
+# ============================================================
+
 SUPPORTED_MODELS = ("yolo", "ssd", "faster_rcnn")
 
+# ============================================================
+# ENTRYPOINT DA ETAPA DE PREPARAÇÃO DO DATASET
+# ============================================================
 
 def main() -> None:
-    # ============================
-    # ETAPA 0 – PREPARAÇÃO DO AMBIENTE
-    # ============================
+    """
+    Ponto de entrada da etapa de preparação do dataset.
+
+    Responsável por:
+    - Preparar o ambiente de execução
+    - Inicializar logging
+    - Validar configurações globais
+    - Executar a preparação do dataset por modelo
+    """
+    # ========================================================
+    # PREPARAÇÃO DO AMBIENTE
+    # ========================================================
+
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # ============================
-    # ETAPA 1 – LOGGING
-    # ============================
+    # ========================================================
+    # LOGGING
+    # ========================================================
+    
     setup_logging()
     logger = logging.getLogger(__name__)
 
     logger.info("Iniciando preparação do dataset - Edge Vision Model")
 
-    # ============================
-    # ETAPA 2 – VALIDAÇÃO DE CONFIGURAÇÕES
-    # ============================
+    # ========================================================
+    # EVALIDAÇÃO DE CONFIGURAÇÕES
+    # ========================================================
+    
     dataset_config = load_yaml(Path(DATASET_CONFIG_PATH))
     validate_dataset_config(dataset_config)
 
     logger.info("Configurações validadas com sucesso")
 
-    # ============================
-    # ETAPA 3 – PREPARAÇÃO DO DATASET
-    # ============================
+    # ========================================================
+    # PREPARAÇÃO DO DATASET
+    # ========================================================
     logger.info("Executando preparação e organização do dataset")
 
     for model_name in SUPPORTED_MODELS:

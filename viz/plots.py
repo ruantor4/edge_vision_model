@@ -8,11 +8,6 @@ Este módulo:
 - Lê o arquivo models_final_comparison.csv
 - Gera gráficos comparativos de qualidade e custo computacional
 - Salva os gráficos como imagens em artifacts/comparisons/plots
-
-Observações:
-- NÃO recalcula métricas
-- NÃO executa inferência
-- NÃO interpreta resultados
 """
 
 from pathlib import Path
@@ -24,9 +19,9 @@ from config.settings import (
     ARTIFACTS_PLOTS_DIR,
 )
 
-# ==============================
+# ============================================================
 # FUNÇÕES AUXILIARES
-# ==============================
+# ============================================================
 
 def load_final_comparison() -> pd.DataFrame:
     """
@@ -62,9 +57,9 @@ def save_bar_plot(
     plt.savefig(output_path)
     plt.close()
 
-# ==============================
+# ============================================================
 # PLOTS DE QUALIDADE
-# ==============================
+# ============================================================
 
 def plot_quality_metrics(df: pd.DataFrame) -> None:
     """
@@ -94,9 +89,9 @@ def plot_quality_metrics(df: pd.DataFrame) -> None:
         output_name="ar_50_95_all.png",
     )
 
-# ==============================
+# ============================================================
 # PLOTS DE CUSTO COMPUTACIONAL
-# ==============================
+# ============================================================
 
 def plot_cost_metrics(df: pd.DataFrame) -> None:
     """
@@ -126,9 +121,9 @@ def plot_cost_metrics(df: pd.DataFrame) -> None:
         output_name="vram_peak_mb.png",
     )
 
-# ==============================
+# ============================================================
 # MAIN
-# ==============================
+# ============================================================
 
 def main() -> None:
     """
