@@ -15,16 +15,17 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, Dict
-from pycocotools.coco import COCO
 
-from evaluators.faster_rcnn_evaluator import evaluate_faster_rcnn
 import torch
 from torch.utils.data import DataLoader
 from torchvision.datasets import CocoDetection
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
 from torchvision.transforms import ToTensor
+from pycocotools.coco import COCO
 
-from config.settings import(
+from evaluators.faster_rcnn_evaluator import evaluate_faster_rcnn
+
+from config.settings import (
     DATASET_SPLITS,
     IMAGES_DIRNAME,
     ARTIFACTS_PREPARED_DATA_DIR,
@@ -33,7 +34,9 @@ from config.settings import(
 
 logger = logging.getLogger(__name__)
 
-# FUNÇOES AUXILIARES
+# ============================================================
+# FUNÇÕES AUXILIARES
+# ============================================================
 
 def _validate_prepared_dataset(prepared_dir: Path) -> None:
     """
@@ -45,7 +48,6 @@ def _validate_prepared_dataset(prepared_dir: Path) -> None:
     - existência da pasta images/
     - existência do arquivo annotations.json
     """
-
     logger.info("Validando dataset preparado para Faster R-CNN")
 
     if not prepared_dir.exists():
@@ -66,8 +68,8 @@ def _ensure_output_dir(path: Path) -> None:
     Garante que o diretório de saída do modelo exista.
 
     Regras:
-    - Se não existir, cria.
-    - Se existir, reutiliza (treino sobrescreve artefatos).
+    - Se não existir, cria
+    - Se existir, reutiliza (treino sobrescreve artefatos)
     """
     if not path.exists():
         logger.info(f"Criando diretório de saída do modelo: {path}")
@@ -95,7 +97,9 @@ def _save_training_metadata(
     with open(metadata_path, "w") as f:
         json.dump(model_config, f, indent=4)
 
+# ============================================================
 # FUNÇÃO PRINCIPAL DE TREINAMENTO
+# ============================================================
 
 def train_faster_rcnn(model_config: Dict[str, Any]) -> None:
     """
@@ -116,15 +120,17 @@ def train_faster_rcnn(model_config: Dict[str, Any]) -> None:
     # Directorios de saída do modelo
     output_model_dir = ARTIFACTS_MODELS_DIR / "faster_rcnn"
 
-    # 1. Validação do dataset preparado
+    # Validação do dataset preparado
     _validate_prepared_dataset(prepared_data_dir)
 
-    # 2. Garantia do diretório de saída do modelo
+    # Garantia do diretório de saída do modelo
     _ensure_output_dir(output_model_dir)
 
-    # =========================
+
+    # ========================================================
     # EXTRAÇÃO DO YAML
-    # =========================
+    # ========================================================
+
     training_cfg = model_config["training"]
     early_cfg = training_cfg.get("early_stopping", {})
 
@@ -146,9 +152,11 @@ def train_faster_rcnn(model_config: Dict[str, Any]) -> None:
         f"lr={lr}, device={device}"
     )
 
-    # =========================
+
+    # ========================================================
     # DATASETS
-    # =========================
+    # ========================================================
+
     def _make_loader(split: str, shuffle: bool) -> DataLoader:
         dataset = CocoDetection(
             root=prepared_data_dir / split / IMAGES_DIRNAME,
@@ -165,17 +173,20 @@ def train_faster_rcnn(model_config: Dict[str, Any]) -> None:
     train_loader = _make_loader("train", shuffle=True)
     val_loader = _make_loader("valid", shuffle=False)
 
-    # =========================
+    # ========================================================
     # COCO GT (VALID)
-    # =========================
+    # ========================================================
+   
     val_annotations_path = (
         prepared_data_dir / "valid" / "annotations.json"
     )
 
     coco_gt_valid = COCO(str(val_annotations_path))
-    # =========================
-    # MODELO FASTER R-CNN
-    # =========================
+   
+    # ========================================================
+    # MODELO E OTIMIZADOR
+    # ========================================================
+   
     model = fasterrcnn_resnet50_fpn(weights="DEFAULT")
     model.to(device)
 
@@ -186,9 +197,10 @@ def train_faster_rcnn(model_config: Dict[str, Any]) -> None:
         weight_decay=weight_decay,
     )
 
-    # =========================
+    # ========================================================
     # LOOP DE TREINO
-    # =========================
+    # ========================================================
+
     best_metric = -float("inf")
     patience_counter = 0
 
@@ -245,9 +257,10 @@ def train_faster_rcnn(model_config: Dict[str, Any]) -> None:
 
         logger.info(f"[Epoch {epoch+1}] Train loss: {epoch_loss:.4f}")
 
-        # =========================
+        # ====================================================
         # VALIDAÇÃO (COCO)
-        # =========================
+        # ====================================================
+
         metrics = evaluate_faster_rcnn(
             model=model,
             dataloader=val_loader,
@@ -272,9 +285,10 @@ def train_faster_rcnn(model_config: Dict[str, Any]) -> None:
             f"{current_metric:.4f}"
         )
 
-        # =========================
+        # ====================================================
         # EARLY STOPPING
-        # =========================
+        # ====================================================
+
         if early_enabled:
             if current_metric > best_metric + min_delta:
                 best_metric = current_metric
@@ -300,9 +314,10 @@ def train_faster_rcnn(model_config: Dict[str, Any]) -> None:
                 break
 
 
-    # =========================
+    # ========================================================
     # SALVAMENTO FINAL
-    # =========================
+    # ========================================================
+
     torch.save(model.state_dict(), output_model_dir / "final_model.pth")
 
     _save_training_metadata(

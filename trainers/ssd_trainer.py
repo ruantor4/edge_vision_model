@@ -34,7 +34,9 @@ from config.settings import (
 
 logger = logging.getLogger(__name__)
 
+# ============================================================
 # FUNÇÕES AUXILIARES
+# ============================================================
 
 def _validate_prepared_dataset(prepared_dir: Path) -> None:
     logger.info("Validando dataset preparado para SSD")
@@ -77,7 +79,7 @@ def _save_training_metadata(
     Armazena:
     - parâmetros do modelo
     - hiperparâmetros de treino
-    """ 
+    """
     metadata_path = output_dir / "training_metadata.txt"
 
     logger.info(f"Salvando metadados do treinamento em: {metadata_path}")
@@ -86,7 +88,9 @@ def _save_training_metadata(
         json.dump(model_config, f, indent=4)
 
 
+# ============================================================
 # FUNÇÃO PRINCIPAL DE TREINAMENTO
+# ============================================================
 
 def train_ssd(model_config: Dict[str, Any]) -> None:
     """
@@ -115,9 +119,10 @@ def train_ssd(model_config: Dict[str, Any]) -> None:
     # Garantia do diretório de saída do modelo
     _ensure_output_dir(output_model_dir)
 
-    # =========================
+    # ========================================================
     # EXTRAÇÃO DO YAML
-    # =========================
+    # ========================================================
+
     training_cfg = model_config["training"]
     early_cfg = training_cfg.get("early_stopping", {})
 
@@ -138,9 +143,10 @@ def train_ssd(model_config: Dict[str, Any]) -> None:
         f"lr={lr}, device={device}"
     )
 
-    # =========================
+    # ========================================================
     # DATASETS
-    # =========================
+    # ========================================================
+
     def _make_loader(split: str, shuffle: bool) -> DataLoader:
         dataset = CocoDetection(
             root=prepared_data_dir / split / IMAGES_DIRNAME,
@@ -157,17 +163,19 @@ def train_ssd(model_config: Dict[str, Any]) -> None:
     train_loader = _make_loader("train", shuffle=True)
     val_loader = _make_loader("valid", shuffle=False)
 
-    # =========================
+    # ========================================================
     # COCO GT (VALID)
-    # =========================
+    # ========================================================
+
     val_annotations_path = (
         prepared_data_dir / "valid" / "annotations.json"
     )
     coco_gt_valid = COCO(str(val_annotations_path))
 
-    # =========================
+    # ========================================================
     # MODELO SSD
-    # =========================
+    # ========================================================
+
     model = ssd300_vgg16(weights="DEFAULT")
     model.to(device)
 
@@ -178,9 +186,10 @@ def train_ssd(model_config: Dict[str, Any]) -> None:
         weight_decay=weight_decay,
     )
 
-    # =========================
+    # ========================================================
     # LOOP DE TREINO
-    # =========================
+    # ========================================================
+
     best_metric = -float("inf")
     patience_counter = 0
 
@@ -233,9 +242,9 @@ def train_ssd(model_config: Dict[str, Any]) -> None:
 
         logger.info(f"[Epoch {epoch+1}] Train loss: {epoch_loss:.4f}")
 
-        # =========================
-        # VALIDAÇÃO (COCO REAL)
-        # =========================
+        # ====================================================
+        # VALIDAÇÃO (COCO)
+        # ====================================================
         metrics = evaluate_ssd(
             model=model,
             dataloader=val_loader,
@@ -260,9 +269,10 @@ def train_ssd(model_config: Dict[str, Any]) -> None:
             f"{current_metric:.4f}"
         )
 
-        # =========================
+        # ====================================================
         # EARLY STOPPING
-        # =========================
+        # ====================================================
+
         if early_enabled:
             if current_metric > best_metric + min_delta:
                 best_metric = current_metric
@@ -287,7 +297,9 @@ def train_ssd(model_config: Dict[str, Any]) -> None:
                 logger.info("Early stopping acionado")
                 break
 
-    # SALVAMENTO DE ARTEFATOS
+    # ========================================================
+    # SALVAMENTO FINAL
+    # ========================================================
     
     torch.save(model.state_dict(), output_model_dir / "final_model.pth")
     _save_training_metadata(

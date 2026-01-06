@@ -143,6 +143,7 @@ def train_yolo(model_config: Dict[str, Any]) -> None:
     # ============================================================
     # TREINAMENTO AUTOMÁTICO (ULTRALYTICS)
     # ============================================================
+
     model.train(
         data=str(prepared_data_dir / "data.yaml"),
         epochs=epochs,
@@ -160,6 +161,7 @@ def train_yolo(model_config: Dict[str, Any]) -> None:
     # ============================================================
     # SALVAMENTO FINAL
     # ============================================================
+    
     trainer = model.trainer
 
     if trainer.best is not None:
