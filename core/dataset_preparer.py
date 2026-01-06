@@ -9,6 +9,7 @@ Este módulo:
 - converte e organiza dados por algoritmo
 - gera datasets preparados em artifacts
 """
+import yaml
 import json
 from pathlib import Path
 import logging
@@ -223,7 +224,7 @@ def _generate_yolo_data_yaml(prepared_yolo_dir: Path, class_names: list[str]) ->
         "names": {i: name for i, name in enumerate(class_names)},
     }
 
-    import yaml
+
     with open(data_yaml_path, "w") as f:
         yaml.dump(content, f, sort_keys=False)
 
@@ -347,8 +348,8 @@ def prepare_ssd_dataset() -> None:
         logger.info((f"Preparando split {split} para o formato SSD"))
 
         raw_split_dir = DATASET_DIR / split
-        prepare_split_dir = output_dir / split
-        prepared_images_dir = prepare_split_dir / IMAGES_DIRNAME
+        prepared_split_dir = output_dir / split
+        prepared_images_dir = prepared_split_dir / IMAGES_DIRNAME
 
         # Copia imagens
         for image_path in (raw_split_dir / IMAGES_DIRNAME).iterdir():
@@ -357,7 +358,7 @@ def prepare_ssd_dataset() -> None:
 
         _convert_yolo_split_to_coco( 
             raw_split_dir=raw_split_dir,
-            prepared_split_dir=prepare_split_dir,
+            prepared_split_dir=prepared_split_dir,
         )
 
     logger.info("Dataset no formato SSD preparado com sucesso")

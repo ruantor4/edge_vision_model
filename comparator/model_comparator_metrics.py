@@ -1,18 +1,17 @@
 """
-model_comparator.py
+model_comparator_metrics.py
 
 Responsável por consolidar e comparar métricas de avaliação
 entre diferentes modelos de detecção de objetos.
 
-Escopo desta versão:
-- Leitura de CSVs de métricas (COCO-style)
-- Consolidação por modelo
-- Geração de rankings por métrica
-- Exportação de resultados em CSV e JSON
+Este módulo atua exclusivamente sobre métricas de avaliação
+no padrão COCO, previamente geradas na etapa de avaliação.
 
-Observação:
-- Custo computacional e facilidade de implementação
-  NÃO são medidos nesta etapa.
+Escopo:
+- Leitura de arquivos CSV de métricas (COCO-style)
+- Consolidação das métricas por modelo
+- Geração de rankings por métrica
+- Exportação de resultados consolidados em CSV e JSON
 """
 
 from pathlib import Path
@@ -30,6 +29,7 @@ from config.settings import (
 # CONFIGURAÇÃO
 # ==============================
 
+# Métricas COCO consideradas na comparação
 METRICS_FIELDS = (
     "AP_50_95_all",
     "AP_50_all",
@@ -37,18 +37,26 @@ METRICS_FIELDS = (
     "AR_50_95_all",
 )
 
-
 # ==============================
 # FUNÇÕES AUXILIARES
 # ==============================
 
 def load_metrics_csv(csv_path: Path) -> Dict[str, float]:
     """
-    Carrega um CSV de métricas e retorna um dicionário.
+    Carrega um arquivo CSV de métricas e retorna um dicionário estruturado.
 
     Requisitos:
-    - CSV deve conter exatamente uma linha de métricas
-    - Campos devem seguir o padrão COCO definido em METRICS_FIELDS
+    - O CSV deve conter exatamente uma linha de métricas
+    - Os campos devem seguir o padrão definido em METRICS_FIELDS
+
+    Args:
+        csv_path (Path): Caminho para o arquivo CSV.
+
+    Returns:
+        Dict[str, float]: Métricas convertidas para float.
+
+    Raises:
+        ValueError: Caso o CSV não contenha exatamente uma linha de dados.
     """
     with csv_path.open(newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -67,8 +75,14 @@ def extract_model_name(csv_path: Path) -> str:
     Extrai o nome do modelo a partir do nome do arquivo CSV.
 
     Exemplo:
-    - yolo_test.csv        -> YOLO
-    - faster_rcnn_test.csv -> FASTER RCNN
+        - yolo_test.csv        -> YOLO
+        - faster_rcnn_test.csv -> FASTER RCNN
+
+    Args:
+        csv_path (Path): Caminho para o arquivo CSV.
+
+    Returns:
+        str: Nome normalizado do modelo.
     """
     return (
         csv_path.stem
@@ -84,9 +98,13 @@ def extract_model_name(csv_path: Path) -> str:
 
 def compare_models(csv_files: List[Path]) -> Dict[str, Dict]:
     """
-    Consolida métricas de múltiplos modelos.
+    Consolida métricas de avaliação de múltiplos modelos.
 
-    Retorna um dicionário estruturado por modelo.
+    Args:
+        csv_files (List[Path]): Lista de arquivos CSV de métricas.
+
+    Returns:
+        Dict[str, Dict]: Resultados consolidados por modelo.
     """
     results: Dict[str, Dict] = {}
 
@@ -105,7 +123,13 @@ def compare_models(csv_files: List[Path]) -> Dict[str, Dict]:
 
 def compute_rankings(results: Dict[str, Dict]) -> Dict[str, List[str]]:
     """
-    Gera rankings de modelos para cada métrica definida.
+    Gera rankings de modelos para cada métrica avaliada.
+
+    Args:
+        results (Dict[str, Dict]): Resultados consolidados por modelo.
+
+    Returns:
+        Dict[str, List[str]]: Rankings ordenados por métrica.
     """
     rankings: Dict[str, List[str]] = {}
 
@@ -125,7 +149,11 @@ def compute_rankings(results: Dict[str, Dict]) -> Dict[str, List[str]]:
 
 def export_csv(results: Dict[str, Dict], output_path: Path) -> None:
     """
-    Exporta um CSV consolidado com métricas por modelo.
+    Exporta um CSV consolidado contendo métricas por modelo.
+
+    Args:
+        results (Dict[str, Dict]): Resultados consolidados.
+        output_path (Path): Caminho de saída do arquivo CSV.
     """
     fieldnames = ["model", *METRICS_FIELDS]
 
@@ -145,7 +173,12 @@ def export_json(
     output_path: Path,
 ) -> None:
     """
-    Exporta um JSON técnico estruturado, contendo métricas e rankings.
+    Exporta um JSON técnico estruturado contendo métricas e rankings.
+
+    Args:
+        results (Dict[str, Dict]): Resultados consolidados por modelo.
+        rankings (Dict[str, List[str]]): Rankings por métrica.
+        output_path (Path): Caminho de saída do arquivo JSON.
     """
     payload = {
         "models": results,
@@ -159,47 +192,3 @@ def export_json(
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(payload, f, indent=4)
 
-
-# ==============================
-# MAIN
-# ==============================
-
-def main() -> None:
-    """
-    Ponto de entrada do comparator de modelos.
-
-    Espera que os arquivos *_test.csv estejam presentes em:
-    ARTIFACTS_METRICS_DIR
-    """
-    csv_files = [
-        ARTIFACTS_METRICS_DIR / "faster_rcnn_test.csv",
-        ARTIFACTS_METRICS_DIR / "ssd_test.csv",
-        ARTIFACTS_METRICS_DIR / "yolo_test.csv",
-    ]
-
-    # Validação explícita de existência dos arquivos
-    for csv_file in csv_files:
-        if not csv_file.exists():
-            raise FileNotFoundError(
-                f"Arquivo de métricas não encontrado: {csv_file}"
-            )
-
-    results = compare_models(csv_files)
-    rankings = compute_rankings(results)
-
-    ARTIFACTS_COMPARISONS_DIR.mkdir(parents=True, exist_ok=True)
-
-    export_csv(
-        results,
-        ARTIFACTS_COMPARISONS_DIR / "models_comparison.csv",
-    )
-
-    export_json(
-        results,
-        rankings,
-        ARTIFACTS_COMPARISONS_DIR / "models_comparison.json",
-    )
-
-
-if __name__ == "__main__":
-    main()

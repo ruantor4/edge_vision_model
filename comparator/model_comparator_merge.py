@@ -4,15 +4,15 @@ model_comparator_merge.py
 Responsável por consolidar os resultados finais da comparação
 entre modelos de detecção de objetos.
 
-Este módulo:
-- Lê os artefatos gerados pelos comparators de métricas e custo computacional
-- Realiza a consolidação por modelo
-- Exporta os resultados finais em CSV e JSON
+Este módulo atua exclusivamente na etapa de consolidação,
+unificando os artefatos gerados pelos comparators de métricas
+e de custo computacional.
 
-Observações:
-- NÃO recalcula métricas
-- NÃO executa inferência
-- NÃO interpreta resultados
+Escopo:
+- Leitura dos arquivos CSV gerados pelos comparators
+- Consolidação dos resultados por modelo
+- Padronização e prefixação das colunas de custo computacional
+- Exportação do resultado final em CSV e JSON
 """
 
 from pathlib import Path
@@ -29,9 +29,13 @@ from config.settings import (
 # CONFIGURAÇÃO
 # ==============================
 
+# Arquivo de métricas consolidadas (AP/AR)
 METRICS_FILE = ARTIFACTS_COMPARISONS_DIR / "models_comparison.csv"
+
+# Arquivo de custo computacional (tempo, FPS, VRAM)
 COST_FILE = ARTIFACTS_COMPARISONS_DIR / "models_cost_comparison.csv"
 
+# Artefatos finais consolidados
 OUTPUT_CSV = ARTIFACTS_COMPARISONS_DIR / "models_final_comparison.csv"
 OUTPUT_JSON = ARTIFACTS_COMPARISONS_DIR / "models_final_comparison.json"
 
@@ -42,7 +46,18 @@ OUTPUT_JSON = ARTIFACTS_COMPARISONS_DIR / "models_final_comparison.json"
 
 def load_csv_as_dict(csv_path: Path, key_field: str) -> Dict[str, Dict]:
     """
-    Carrega um CSV e indexa os registros por um campo chave.
+    Carrega um arquivo CSV e indexa seus registros por um campo chave.
+
+    Args:
+        csv_path (Path): Caminho para o arquivo CSV.
+        key_field (str): Campo utilizado como chave primária.
+
+    Returns:
+        Dict[str, Dict]: Dicionário indexado pelo campo chave.
+
+    Raises:
+        FileNotFoundError: Caso o arquivo CSV não exista.
+        ValueError: Caso o CSV esteja vazio ou inválido.
     """
     if not csv_path.exists():
         raise FileNotFoundError(f"Arquivo não encontrado: {csv_path}")
@@ -66,7 +81,23 @@ def merge_results(
     cost_data: Dict[str, Dict],
 ) -> Dict[str, Dict]:
     """
-    Realiza merge entre métricas e custo computacional.
+    Realiza a consolidação entre métricas de avaliação e custo computacional.
+
+    Para cada modelo:
+    - Mantém as métricas originais
+    - Prefixa os campos de custo computacional com 'cost_'
+    - Converte valores numéricos para float
+    - Preserva valores ausentes como None
+
+    Args:
+        metrics_data (Dict[str, Dict]): Métricas de avaliação por modelo.
+        cost_data (Dict[str, Dict]): Métricas de custo computacional por modelo.
+
+    Returns:
+        Dict[str, Dict]: Dados consolidados por modelo.
+
+    Raises:
+        ValueError: Caso um modelo presente nas métricas não exista nos dados de custo.
     """
     merged: Dict[str, Dict] = {}
 
@@ -98,7 +129,10 @@ def merge_results(
 
 def export_csv(merged_data: Dict[str, Dict]) -> None:
     """
-    Exporta CSV final consolidado.
+    Exporta o resultado final consolidado em formato CSV.
+
+    Args:
+        merged_data (Dict[str, Dict]): Dados consolidados por modelo.
     """
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as f:
         fieldnames = list(next(iter(merged_data.values())).keys())
@@ -111,7 +145,13 @@ def export_csv(merged_data: Dict[str, Dict]) -> None:
 
 def export_json(merged_data: Dict[str, Dict]) -> None:
     """
-    Exporta JSON final consolidado.
+    Exporta o resultado final consolidado em formato JSON.
+
+    O payload inclui referência explícita aos arquivos de origem,
+    garantindo rastreabilidade do processo de comparação.
+
+    Args:
+        merged_data (Dict[str, Dict]): Dados consolidados por modelo.
     """
     payload = {
         "models": merged_data,
@@ -124,23 +164,3 @@ def export_json(merged_data: Dict[str, Dict]) -> None:
     with OUTPUT_JSON.open("w", encoding="utf-8") as f:
         json.dump(payload, f, indent=4)
 
-
-# ==============================
-# MAIN
-# ==============================
-
-def main() -> None:
-    """
-    Ponto de entrada do consolidador final.
-    """
-    metrics_data = load_csv_as_dict(METRICS_FILE, key_field="model")
-    cost_data = load_csv_as_dict(COST_FILE, key_field="model")
-
-    merged_data = merge_results(metrics_data, cost_data)
-
-    export_csv(merged_data)
-    export_json(merged_data)
-
-
-if __name__ == "__main__":
-    main()

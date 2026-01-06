@@ -268,18 +268,3 @@ def export_results(results: Dict[str, Dict]) -> None:
     with json_path.open("w", encoding="utf-8") as f:
         json.dump(results, f, indent=4)
 
-
-# ==============================
-# MAIN
-# ==============================
-
-def main() -> None:
-    """
-    Ponto de entrada do comparator de custo computacional.
-    """
-    results = compare_models_cost()
-    export_results(results)
-
-
-if __name__ == "__main__":
-    main()
