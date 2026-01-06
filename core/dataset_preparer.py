@@ -2,13 +2,19 @@
 dataset_preparer.py
 
 Responsável por preparar datasets de detecção de objetos
-para diferentes algoritmos de modelagem.
+para diferentes algoritmos de modelagem no projeto edge-vision-model.
 
-Este módulo:
-- lê o dataset RAW (somente leitura)
-- converte e organiza dados por algoritmo
-- gera datasets preparados em artifacts
+Este módulo realiza a conversão controlada do dataset RAW
+(somente leitura) para formatos específicos exigidos por
+cada algoritmo de detecção.
+
+Escopo:
+- Validação estrutural do dataset RAW
+- Preparação de datasets por algoritmo (YOLO, SSD, Faster R-CNN)
+- Conversão de anotações YOLO para o formato COCO
+- Geração de artifacts de dataset preparados
 """
+
 import yaml
 import json
 from pathlib import Path
@@ -27,16 +33,18 @@ from config.settings import(
 
 logger = logging.getLogger(__name__)
 
-# FUNÇOES AUXILIARES
+# ============================================================
+# FUNÇÕES AUXILIARES
+# ============================================================
 
 def _validate_raw_dataset() -> None:
     """
-    Validação mínima do dataset RAW antes da preparação.
+    Realiza validação mínima do dataset RAW antes da preparação.
 
     Verifica:
-    - existência do diretório raiz do dataset
-    - existência dos splits esperados
-    - existência das pastas images/ e labels/ em cada split
+    - Existência do diretório raiz do dataset
+    - Existência dos splits esperados
+    - Existência das pastas images/ e labels/ em cada split
     """
     logger.info("Validando estrutura do dataset RAW")
 
@@ -62,12 +70,12 @@ def _validate_raw_dataset() -> None:
 
 def _ensure_output_dirs(path: Path) -> None:
     """
-    Garante que os diretórios de saída existam.
+    Garante a existência segura de diretórios de saída.
 
     Regras:
-    - Se o diretório não existir, cria.
-    - Se existir e ALLOW_OVERWRITE_ARTIFACTS=False, falha.
-    - Se existir e ALLOW_OVERWRITE_ARTIFACTS=True, reutiliza.
+    - Se o diretório não existir, ele é criado
+    - Se existir e ALLOW_OVERWRITE_ARTIFACTS=False, a execução falha
+    - Se existir e ALLOW_OVERWRITE_ARTIFACTS=True, o diretório é reutilizado
     """
     
     # diretório não existe → cria
@@ -82,17 +90,27 @@ def _ensure_output_dirs(path: Path) -> None:
 
     # diretório existe e sobrescrita permitida → reutiliza
     logger.warning(f"Diretório de saída já existe e será reutilizado: {path}")
-    
-   
+
+
+def _create_output_dirs(path: Path) -> None:
+    """
+    Wrapper para criação de diretórios de saída.
+
+    Centraliza a política de sobrescrita delegando
+    a lógica para _ensure_output_dirs().
+    """
+    _ensure_output_dirs(path)
+
+
 def _copy_split_structure(destination_root: Path) -> None:
     """
     Replica a estrutura de splits do dataset no diretório de saída.
 
-    Cria, para cada split:
+    Para cada split esperado, cria:
     - pasta do split (train/valid/test)
     - subpastas images/ e labels/
 
-    Não copia arquivos.
+    Nenhum arquivo é copiado nesta etapa.
     """
     logger.info(f"Criando estrutura de splits no diretório de saída: {destination_root}")
     
@@ -111,17 +129,6 @@ def _copy_split_structure(destination_root: Path) -> None:
     logger.info("Estrutura de splits criada com sucesso")
 
 
-def _create_output_dirs(path: Path) -> None:
-    """
-    Cria diretórios de saída de forma segura.
-
-    Esta função é um wrapper simples que centraliza a criação
-    de diretórios de saída, delegando a política de sobrescrita
-    para _ensure_output_dirs().
-    """
-    _ensure_output_dirs(path)
-
-
 def _convert_yolo_split_to_coco(
     raw_split_dir: Path,
     prepared_split_dir: Path,
@@ -129,11 +136,11 @@ def _convert_yolo_split_to_coco(
     """
     Converte um split do dataset do formato YOLO para COCO.
 
-    - Lê imagens e labels YOLO
-    - Converte bounding boxes normalizadas para pixels
-    - Gera annotations.json no formato COCO
+    Operações:
+    - Leitura de imagens e labels YOLO
+    - Conversão de bounding boxes normalizadas para pixels
+    - Geração do arquivo annotations.json no padrão COCO
     """
-
     images_dir = raw_split_dir / IMAGES_DIRNAME
     labels_dir = raw_split_dir / LABELS_DIRNAME
 
@@ -213,6 +220,8 @@ def _convert_yolo_split_to_coco(
 def _generate_yolo_data_yaml(prepared_yolo_dir: Path, class_names: list[str]) -> None:
     """
     Gera o arquivo data.yaml exigido pelo Ultralytics YOLO.
+
+    Este arquivo descreve paths e classes do dataset preparado.
     """
     data_yaml_path = prepared_yolo_dir / "data.yaml"
 
@@ -228,15 +237,19 @@ def _generate_yolo_data_yaml(prepared_yolo_dir: Path, class_names: list[str]) ->
     with open(data_yaml_path, "w") as f:
         yaml.dump(content, f, sort_keys=False)
 
-# FUNÇOES PRINCIPAIS
+# ============================================================
+# FUNÇÕES PRINCIPAIS
+# ============================================================
 
 def prepare_dataset(model_name: str) -> None:
     """
-    Prepara o dataset conforme o algoritmo informado.
+    Ponto de entrada público para preparação do dataset.
 
-    Esta função atua como ponto de entrada público do módulo,
-    validando o nome do modelo e delegando a preparação para
+    Valida o nome do modelo e delega a preparação para
     a implementação específica.
+
+    Args:
+        model_name (str): Nome do modelo ('yolo', 'ssd', 'faster_rcnn').
     """
     logger.info(f"Iniciando preparação do dataset para o modelo: {model_name}")
 
@@ -263,10 +276,12 @@ def prepare_yolo_dataset() -> None:
     Prepara o dataset no formato YOLO.
 
     Fluxo:
-    1. Valida a estrutura do dataset RAW
-    2. Cria o diretório de saída do dataset preparado
-    3. Replica a estrutura de splits (train/valid/test)
-    4. Copia imagens e labels para o diretório preparado
+    1. Validação do dataset RAW
+    2. Criação do diretório de saída
+    3. Replicação da estrutura de splits
+    4. Cópia de imagens e labels
+    5. Conversão para COCO (annotations.json)
+    6. Geração do data.yaml
     """
     logger.info("Preparando dataset no formato YOLO")
 
@@ -323,11 +338,8 @@ def prepare_ssd_dataset() -> None:
     """
     Prepara o dataset para treinamento com SSD.
 
-    Fluxo:
-    1. Valida a estrutura do dataset RAW
-    2. Cria o diretório de saída do dataset preparado
-    3. Replica a estrutura de splits
-    4. Converte o dataset para o formato exigido pelo SSD (ex: COCO/VOC)
+    Converte o dataset RAW para o formato COCO,
+    preservando apenas as imagens e anotações necessárias.
     """
     logger.info("Iniciando preparação do dataset no formato SSD")
 
@@ -368,11 +380,8 @@ def prepare_faster_rcnn_dataset() -> None:
     """
     Prepara o dataset para treinamento com Faster R-CNN.
 
-    Fluxo:
-    1. Valida a estrutura do dataset RAW
-    2. Cria o diretório de saída do dataset preparado
-    3. Replica a estrutura de splits
-    4. Converte o dataset para o formato COCO
+    Converte o dataset RAW para o formato COCO,
+    mantendo compatibilidade com torchvision.
     """
     logger.info("Iniciando preparação do dataset no formato Faster R-CNN")
 

@@ -10,11 +10,6 @@ Este módulo:
 - carrega modelos já treinados (YOLO, SSD, Faster R-CNN)
 - delega inferência aos evaluators específicos
 - gera métricas oficiais em CSV (artifacts/metrics)
-
-Este módulo:
-- NÃO treina modelos
-- NÃO compara resultados
-- NÃO decide vencedor
 """
 
 import logging
@@ -55,6 +50,11 @@ logger = logging.getLogger(__name__)
 def _load_metrics_config() -> Dict:
     """
     Carrega o contrato formal de avaliação (metrics.yaml).
+
+    Responsável apenas por:
+    - localizar o arquivo de configuração
+    - carregar o YAML
+    - retornar o bloco 'evaluation'
     """
     path = ROOT_DIR / "config" / "metrics.yaml"
 
@@ -75,6 +75,14 @@ def _build_dataloader(
     prepared_dir: Path,
     split: str,
 ) -> DataLoader:
+    """
+    Constrói o DataLoader no formato COCO a partir
+    do dataset previamente preparado.
+
+    Utiliza:
+    - imagens do split informado
+    - arquivo annotations.json no padrão COCO
+    """
     dataset = CocoDetection(
         root=prepared_dir / split / IMAGES_DIRNAME,
         annFile=prepared_dir / split / "annotations.json",
@@ -88,12 +96,14 @@ def _build_dataloader(
         collate_fn=lambda x: tuple(zip(*x)),
     )
 
-
 # ============================================================
 # EXECUÇÃO POR MODELO
 # ============================================================
 
 def _run_yolo(split: str, conf: float, device: torch.device) -> None:
+    """
+    Executa a avaliação do modelo YOLO.
+    """
     logger.info("Avaliando YOLO")
 
     prepared = ARTIFACTS_PREPARED_DATA_DIR / "yolo"
@@ -119,6 +129,9 @@ def _run_yolo(split: str, conf: float, device: torch.device) -> None:
 
 
 def _run_ssd(split: str, conf: float, device: torch.device) -> None:
+    """
+    Executa a avaliação do modelo SSD.
+    """
     logger.info("Avaliando SSD")
 
     prepared = ARTIFACTS_PREPARED_DATA_DIR / "ssd"
@@ -145,6 +158,9 @@ def _run_ssd(split: str, conf: float, device: torch.device) -> None:
 
 
 def _run_faster_rcnn(split: str, conf: float, device: torch.device) -> None:
+    """
+    Executa a avaliação do modelo Faster R-CNN.
+    """
     logger.info("Avaliando Faster R-CNN")
 
     prepared = ARTIFACTS_PREPARED_DATA_DIR / "faster_rcnn"
@@ -169,14 +185,19 @@ def _run_faster_rcnn(split: str, conf: float, device: torch.device) -> None:
         save_metrics=True,
     )
 
-
 # ============================================================
 # ENTRYPOINT DA AVALIAÇÃO
 # ============================================================
 
 def run_evaluation() -> None:
     """
-    Executa a avaliação FINAL da pipeline.
+    Orquestra a execução completa da etapa de avaliação.
+
+    Fluxo:
+    1. Cria diretório de métricas (se necessário)
+    2. Carrega o contrato formal de avaliação
+    3. Define split, threshold e dispositivo
+    4. Executa avaliação por modelo
     """
     logger.info("=== INICIANDO AVALIAÇÃO FINAL ===")
 
