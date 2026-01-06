@@ -75,6 +75,7 @@ def main() -> None:
     # ========================================================
     # PREPARAÇÃO DO DATASET
     # ========================================================
+    
     logger.info("Executando preparação e organização do dataset")
 
     for model_name in SUPPORTED_MODELS:

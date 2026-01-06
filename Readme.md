@@ -25,12 +25,12 @@ O projeto foi desenvolvido com foco em clareza arquitetural, separação de resp
 
 A estratégia adotada neste projeto segue práticas profissionais de engenharia de Machine Learning:
 
-- **Separação clara entre EDA, modelagem e inferência**
-- **Uso de dataset externo imutável**, previamente analisado no projeto Edge Vision EDA
-- **Preparação controlada dos dados**, específica para cada algoritmo
-- **Treinamento isolado por arquitetura**
-- **Avaliação em conjunto de teste nunca utilizado durante o treinamento**
-- **Comparação objetiva baseada em métricas padronizadas**
+- Separação clara entre **EDA**, **modelagem**, **avaliação** e **comparação**
+- Uso de **dataset externo imutável**, previamente analisado no projeto Edge Vision EDA
+- Preparação controlada e específica dos dados por arquitetura
+- Treinamento isolado por modelo
+- Avaliação em conjunto de teste nunca utilizado durante o treinamento
+- Comparação objetiva baseada em métricas padronizadas
 
 Cada algoritmo é treinado e avaliado sob **condições equivalentes**, garantindo uma comparação técnica justa.
 
@@ -38,18 +38,14 @@ Cada algoritmo é treinado e avaliado sob **condições equivalentes**, garantin
 
 ## Algoritmos Avaliados
 
-Os seguintes algoritmos de detecção de objetos são utilizados e comparados:
-
 - **[YOLO](https://docs.ultralytics.com/pt/)**  
-  Arquitetura de estágio único, otimizada para inferência rápida, especialmente adequada para aplicações em edge computing.
+  Arquitetura de estágio único, otimizada para inferência rápida, especialmente adequada para edge computing.
 
 - **[SSD](https://pytorch.org/hub/nvidia_deeplearningexamples_ssd/)**  
-  Detector de estágio único com foco em simplicidade e desempenho intermediário entre velocidade e precisão.
+  Detector de estágio único com compromisso entre velocidade e precisão.
 
 - **[Faster R-CNN](https://docs.pytorch.org/vision/master/models/faster_rcnn.html)**  
   Arquitetura de dois estágios, com maior custo computacional, utilizada como referência de precisão.
-
-Cada modelo é treinado com configurações explícitas e avaliado utilizando o mesmo conjunto de métricas.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -57,27 +53,26 @@ Cada modelo é treinado com configurações explícitas e avaliado utilizando o 
 
 | Categoria | Descrição |
 |-----------|-----------|
-| **Preparação de Dados** | Conversão e organização do dataset conforme requisitos de cada algoritmo. |
-| **Treinamento de Modelos** | Treinamento controlado de YOLO, SSD e Faster R-CNN. |
-| **Avaliação de Desempenho** | Cálculo de métricas padronizadas (COCO-style) em conjunto de teste isolado. |
-| **Análise Comparativa** | Comparação objetiva de desempenho entre algoritmos. |
-| **Versionamento de Artefatos** | Registro de dados preparados, pesos treinados e métricas por execução. |
-| **Persistência de Resultados** | Salvamento estruturado de métricas e logs. |
-| **Pipeline Reprodutível** | Execução determinística baseada em configurações versionadas. |
+| **Preparação de Dados** | Conversão e organização do dataset por arquitetura |
+| **Treinamento de Modelos** | Treinamento isolado e rastreável por algoritmo |
+| **Avaliação de Desempenho** | Avaliação COCO-style em conjunto de teste |
+| **Análise Comparativa** | Comparação objetiva de métricas e custo computacional |
+| **Versionamento de Artefatos** | Registro de datasets, pesos e métricas |
+| **Persistência de Resultados** | Salvamento estruturado em artifacts |
+| **Pipeline Reprodutível** | Execução determinística baseada em configs |
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ## Métricas de Avaliação
 
-A avaliação dos modelos é realizada utilizando métricas padronizadas no estilo COCO, amplamente aceitas na literatura e na indústria:
+A avaliação utiliza métricas padronizadas no estilo COCO:
 
-- **Average Precision (AP@0.5:0.95)** – métrica principal de desempenho global.
-- **Average Precision (AP@0.5)** – desempenho em limiar fixo de IoU.
-- **Average Recall (AR@0.5:0.95)** – capacidade média de recuperação dos objetos.
-- **Tempo médio de inferência por imagem**
-- **Frames por segundo (FPS)**
-- **Pico de uso de memória de GPU (VRAM)**
-
-As métricas são definidas previamente e aplicadas de forma consistente a todos os modelos avaliados.
+- **AP@0.5:0.95** – desempenho global
+- **AP@0.5** – precisão em IoU fixo
+- **AR@0.5:0.95** – capacidade de recall
+- **Tempo médio de inferência**
+- **FPS**
+- **Pico de uso de VRAM**
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -143,6 +138,7 @@ edge-vision-model/
 ├── run_prepare.py              # Execução da preparação do dataset
 ├── run_model.py                # Execução do treinamento dos modelos
 ├── run_evaluate.py             # Execução da avaliação dos modelos
+├── run_compare.py              # Execução da comparação entre modelos
 │
 ├── requirements.txt            # Dependências do projeto
 └── README.md                   # Documentação técnica
@@ -210,6 +206,7 @@ A comparação de métricas, custo computacional e geração de gráficos é rea
 partir dos artefatos gerados nas etapas anteriores.
 
 ```bash
+$ python run_compare.py
 $ python -m viz.plots
 ```
 
@@ -221,5 +218,5 @@ $ python -m viz.plots
 - O conjunto de teste é mantido isolado e nunca utilizado durante o treinamento.
 - Os modelos selecionados são utilizados em projetos correlatos do ecossistema Edge Vision.
 - A execução da pipeline é organizada em etapas explícitas e independentes, por meio dos scripts 
-  `run_prepare.py`, `run_model.py` e `run_evaluate.py`, assegurando controle operacional, rastreabilidade 
+  `run_prepare.py`, `run_model.py`, `run_evaluate.py` e `run_compare.py`, assegurando controle operacional, rastreabilidade 
   e reprodutibilidade experimental.
