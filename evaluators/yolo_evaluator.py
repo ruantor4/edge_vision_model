@@ -10,12 +10,6 @@ Responsabilidades:
 - Converter predições YOLO (cx, cy, w, h) para COCO (x, y, w, h)
 - Chamar o evaluator base (COCO)
 - Retornar métricas padronizadas (mAP / AR)
-
-Este módulo:
-- NÃO treina modelos
-- NÃO decide early stopping
-- NÃO compara resultados
-- Atua apenas como adaptador de saída
 """
 
 from typing import Dict, List
@@ -66,10 +60,8 @@ def evaluate_yolo(
 
     with torch.no_grad():
         for images, targets in dataloader:
-            # ====================================================
-            # 🔧 CONVERSÃO OBRIGATÓRIA
-            # torch.Tensor (CHW, float) -> np.ndarray (HWC, uint8)
-            # ====================================================
+        
+            # Conversão obrigatória torch.Tensor (CHW, float) -> np.ndarray (HWC, uint8)
             np_images = []
 
             for img in images:
@@ -77,9 +69,8 @@ def evaluate_yolo(
                 img_np = (img_np * 255).astype("uint8")      # float -> uint8
                 np_images.append(img_np)
 
-            # ====================================================
-            # INFERÊNCIA YOLO (API CORRETA)
-            # ====================================================
+            
+            # Inferencia YOLO
             results = model.predict(
                 source=np_images,
                 imgsz=640,
@@ -131,6 +122,7 @@ def evaluate_yolo(
             "para avaliação COCO"
         )
 
+    # Delegação da avaliação ao evaluator base COCO
     metrics = evaluate_coco(
         coco_gt=coco_gt,
         predictions=predictions,

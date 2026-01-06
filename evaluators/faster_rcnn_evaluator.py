@@ -66,12 +66,14 @@ def evaluate_faster_rcnn(
 
     with torch.no_grad():
         for images, targets in dataloader:
+
             # targets: lista de listas de anotações COCO
             images = [img.to(device) for img in images]
 
             outputs = model(images)
 
             for output, target in zip(outputs, targets):
+                
                 # Se a imagem não possui anotações GT, ignora
                 if len(target) == 0:
                     continue
@@ -107,6 +109,7 @@ def evaluate_faster_rcnn(
             "para avaliação COCO"
         )
 
+    # Delegação da avaliação ao evaluator base COCO
     metrics = evaluate_coco(
         coco_gt=coco_gt,
         predictions=predictions,

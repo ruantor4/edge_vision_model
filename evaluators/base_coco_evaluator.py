@@ -34,8 +34,8 @@ from config.settings import ARTIFACTS_METRICS_DIR
 # TIPOS AUXILIARES
 # ============================================================
 
+# Estrutura esperada de uma predição individual no formato COCO
 CocoPrediction = Dict[str, float]
-
 
 # ============================================================
 # FUNÇÕES AUXILIARES
@@ -79,7 +79,6 @@ def _build_coco_predictions(
         )
 
     return coco_results
-
 
 # ============================================================
 # FUNÇÃO PRINCIPAL DE AVALIAÇÃO
@@ -136,7 +135,6 @@ def evaluate_coco(
         )
 
     return metrics
-
 
 # ============================================================
 # PERSISTÊNCIA DE MÉTRICAS

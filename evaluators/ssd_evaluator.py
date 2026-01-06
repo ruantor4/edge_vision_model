@@ -10,12 +10,6 @@ Responsabilidades:
 - Converter outputs do torchvision para predições COCO
 - Chamar o evaluator base (COCO)
 - Retornar métricas padronizadas (mAP / AR)
-
-Este módulo:
-- NÃO treina modelos
-- NÃO decide early stopping
-- NÃO compara resultados
-- Atua apenas como adaptador de saída
 """
 
 from typing import Dict, List
@@ -66,11 +60,15 @@ def evaluate_ssd(
 
     with torch.no_grad():
         for images, targets in dataloader:
+
+            # Movimenta imagens para o dispositivo
             images = [img.to(device) for img in images]
 
             outputs = model(images)
 
             for output, target in zip(outputs, targets):
+
+                # Ignora imagens sem anotações GT
                 if len(target) == 0:
                     continue
 
@@ -104,6 +102,7 @@ def evaluate_ssd(
             "para avaliação COCO"
         )
 
+    # Delegação da avaliação ao evaluator base COCO
     metrics = evaluate_coco(
         coco_gt=coco_gt,
         predictions=predictions,
