@@ -1,0 +1,37 @@
+model:
+  name: ssd
+  framework: torchvision
+  version: ssd300_vgg16
+  task: detection
+
+dataset:
+  source: dataset.yaml
+  format: yolo
+
+training:
+  epochs: 50
+  batch_size: 8
+  image_size: 300
+  optimizer: SGD
+  learning_rate: 0.001
+  weight_decay: 0.0005
+
+  preferred_device: cuda
+  fallback_device: cpu
+  mixed_precision: true
+  workers: 4
+  deterministic: true
+  seed: 42
+
+  early_stopping:
+    enabled: true
+    monitor: AP_50_95_all
+    patience: 7
+    min_delta: 0.001
+
+evaluation:
+  use_metrics_from: metrics.yaml
+
+artifacts:
+  output_dir: artifacts/models/ssd
+  save_best: true
